@@ -1,10 +1,8 @@
 const mongoose = require('mongoose')
-// mongoose.set('debug', true);
+const { DB_URL } = require('./index')
 
 const connection = mongoose
-  .createConnection(
-    `mongodb+srv://dikshamittal21297:dikshamittal21297@cluster0.y2hv4xj.mongodb.net/?retryWrites=true&w=majority`,
-  )
+  .createConnection(DB_URL)
   .on('open', () => {
     console.log('MongoDB Connected')
   })

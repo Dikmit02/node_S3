@@ -36,26 +36,7 @@ router.post('/createBucket', Auth.userAuthMiddleware, async (req, res) => {
   }
 })
 
-router.get('/getAllBuckets', Auth.userAuthMiddleware, async (req, res) => {
-  //joining path of directory
-  const rootPath = path.join('rootFolder')
-
-  //passsing rootPath and callback function
-  fs.readdir(rootPath, (err, files) => {
-    if (err) {
-      console.error(err)
-      return
-    }
-    const directories = files.filter((file) => {
-      const filePath = path.join(rootPath, file)
-      return fs.statSync(filePath).isDirectory()
-    })
-    if (directories) {
-      return res.json({ status: 200, success: directories })
-    }
-  })
-})
-
+//Route to upload a file to a bucket
 router.post(
   '/uploadFile',
   Auth.userAuthMiddleware,
@@ -75,6 +56,26 @@ router.post(
   },
 )
 
+//Route to get all the buckets of a user
+router.get('/getAllBuckets', Auth.userAuthMiddleware, async (req, res) => {
+  const rootPath = path.join('rootFolder')
+
+  fs.readdir(rootPath, (err, files) => {
+    if (err) {
+      console.error(err)
+      return
+    }
+    const directories = files.filter((file) => {
+      const filePath = path.join(rootPath, file)
+      return fs.statSync(filePath).isDirectory()
+    })
+    if (directories) {
+      return res.json({ status: 200, success: directories })
+    }
+  })
+})
+
+//Route to get all files from the bucket
 router.get('/getAllFiles', Auth.userAuthMiddleware, async (req, res) => {
   const bucketName = req.body.bucketName
   if (!bucketName) {
@@ -97,6 +98,7 @@ router.get('/getAllFiles', Auth.userAuthMiddleware, async (req, res) => {
   }
 })
 
+//Route to download a file from the bucket
 router.get(
   '/downloadFile/:folderName/:filename',
   Auth.userAuthMiddleware,
@@ -112,40 +114,7 @@ router.get(
   },
 )
 
-router.delete(
-  '/deleteFileFromBucket',
-  Auth.userAuthMiddleware,
-  async (req, res) => {
-    const folderName = req.body.folderName
-    const fileName = req.body.fileName
-    if (!folderName) {
-      return res.json({ status: false, message: 'Folder Name is Mandatory' })
-    }
-    if (!fileName) {
-      return res.json({ status: false, message: 'File Name is Mandatory' })
-    }
-    const rootFolder = 'rootFolder'
-    const filePath = `${rootFolder}/${folderName}/${fileName}`
-    try {
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(err)
-          return
-        }
-      })
-
-      const user = await UserModel.findOne({ apiKey: req.query.apiKey })
-      await UploadModel.deleteOne({
-        userId: user?._id,
-        path: filePath,
-      })
-      return res.json({ status: true, success: 'File deleted successfully' })
-    } catch (error) {
-      return res.json({ status: false, success: error })
-    }
-  },
-)
-
+//Route to update a file in a bucket
 router.put(
   '/updateFileInBucket/:folderName/:fileName',
   Auth.userAuthMiddleware,
@@ -187,6 +156,42 @@ router.put(
   },
 )
 
+//Route to delete a file from the bucket
+router.delete(
+  '/deleteFileFromBucket',
+  Auth.userAuthMiddleware,
+  async (req, res) => {
+    const folderName = req.body.folderName
+    const fileName = req.body.fileName
+    if (!folderName) {
+      return res.json({ status: false, message: 'Folder Name is Mandatory' })
+    }
+    if (!fileName) {
+      return res.json({ status: false, message: 'File Name is Mandatory' })
+    }
+    const rootFolder = 'rootFolder'
+    const filePath = `${rootFolder}/${folderName}/${fileName}`
+    try {
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(err)
+          return
+        }
+      })
+
+      const user = await UserModel.findOne({ apiKey: req.query.apiKey })
+      await UploadModel.deleteOne({
+        userId: user?._id,
+        path: filePath,
+      })
+      return res.json({ status: true, success: 'File deleted successfully' })
+    } catch (error) {
+      return res.json({ status: false, success: error })
+    }
+  },
+)
+
+//Route to delete a bucket along with all the files.
 router.delete('/deleteBucket', Auth.userAuthMiddleware, async (req, res) => {
   const folderName = req.body.folderName
   if (!folderName) {
@@ -213,4 +218,5 @@ router.delete('/deleteBucket', Auth.userAuthMiddleware, async (req, res) => {
     return res.json({ status: false, success: error })
   }
 })
+
 module.exports = router

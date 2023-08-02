@@ -3,6 +3,7 @@ const userModel = require('../model/user.model')
 const crypto = require('crypto-js')
 const Auth = require('../middleWare/auth.middleware')
 
+//Route to register the user
 router.post('/register', async (req, res) => {
   try {
     const { name } = req.body
@@ -16,6 +17,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
+//Route to login the user
 router.post('/login', Auth.userAuthMiddleware, async (req, res) => {
   try {
     if (req.user) {
